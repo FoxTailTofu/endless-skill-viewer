@@ -29,6 +29,7 @@
 
     th {
       background: #f0f0f0;
+      text-align: center;
     }
 
     .skill-name {
@@ -64,7 +65,7 @@
 
     function translateKeys(effectStr, keyMap) {
       return effectStr.replace(/\b(\w+)\s*:/g, (match, key) => {
-        return (keyMap[key] || key) + ":";
+        return "<b>" + (keyMap[key] || key) + "</b>: ";
       });
     }
     const effectMap = {
@@ -147,9 +148,9 @@
       thead.innerHTML = `
       <tr>
         <th hidden>Skill ID</th>
-        <th>名稱</th>
-        <th>類型</th>
-        <th>時間</th>
+        <th width=25%>技能名稱</th>
+        <th width=5%>類型</th>
+        <th width=15%>消耗／冷卻</th>
         <th hidden>敘述</th>
         <th>效果</th>
 
@@ -167,9 +168,9 @@
         const level = typeof skill.requiredLevel === "function" ? skill.requiredLevel() : "";
         const desc = typeof skill.description === "function" ? skill.description() : "";
         const max = typeof skill.maxLevel === "function" ? skill.maxLevel() : false;
-        const cooldown = typeof skill.cooldown === "function" ? skill.cooldown() / 1000 + ' 秒' : " - ";
-        const duration = typeof skill.duration === "function" ? skill.duration() / 1000 + ' 秒' : " - ";
-        const manaCost = skill.manaCost?.toString().replace("e => ", '').replace('e', '等級') ?? " - "
+        const cooldown = typeof skill.cooldown === "function" ? skill.cooldown() / 1000 + ' 秒' : false;
+        const duration = typeof skill.duration === "function" ? skill.duration() / 1000 + ' 秒' : false;
+        const manaCost = skill.manaCost?.toString().replace("e => ", '').replace('e', '等級') ?? false
         const summonState = stripString(skill.summonStats?.toString() ?? ' - ')
         const effect = stripString(skill.effect.toString())
 
@@ -177,11 +178,15 @@
         const effectTranslated = translateKeys(effect, effectMap);
         const summonStateTranslated = translateKeys(summonState, effectMap);
 
+        const costs = []
+        if(manaCost) costs.push("<b>消耗</b>: " + manaCost);
+        if(cooldown) costs.push("<b>冷卻</b>: " + cooldown);
+        if(duration) costs.push("<b>持續</b>: " + duration);
         tr.innerHTML = `
           <td hidden>${skillId}</td>
-          <td class="skill-name">(${level}) ${name} ${max ? "(Max: " + max + ")": ""}</td>
-          <td>${typeMap[type]}</td>
-          <td>消耗: ${manaCost}<br>冷卻: ${cooldown}<br>持續: ${duration}</td>
+          <td class="skill-name">(${level}) ${name} ${max ? "(最大: " + max + ")" : ""}</td>
+          <td style="text-align:center">${typeMap[type]}</td>
+          <td>${costs.join("<br>")}</td>
           <td hidden>${desc}</td>
           <td>${type == 'summon' ? summonStateTranslated : effectTranslated}</td>
         `;

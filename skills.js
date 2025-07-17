@@ -1,6 +1,6 @@
 
 si = [1, 10, 25, 60, 150, 400, 750, 1200, 2e3, 3e3, 5e3];
-ni = '-'
+ni = false
 ki = {
   WARRIOR: {
     bash: {
@@ -1138,6 +1138,7 @@ ki = {
       duration: () => 12000,
       requiredLevel: () => si[0],
       icon: () => 'summon-pest',
+      
       description: () => 'Summons a pest to your aid, dealing percent of your damage.',
       maxLevel: () => ni,
       effect: e => ({
