@@ -1,82 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Skill Viewer</title>
   <style>
-    body { font-family: sans-serif; padding: 1rem; }
-    h2 { margin-top: 2rem; }
-    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
-    th { background: #f0f0f0; }
-    .skill-name { font-weight: bold; }
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+    }
+
+    h2 {
+      margin-top: 2rem;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+
+    .skill-name {
+      font-weight: bold;
+    }
   </style>
 </head>
+
 <body>
   <h1>Endless 全職業技能 0.5.0</h1>
   <div id="skill-container"></div>
 
   <script src="./skills.js"></script>
   <script>
-    const container = document.getElementById('skill-container');
+    const container = document.getElementById("skill-container");
+
+    const typeMap = {
+      toggle: "開關",
+      passive: "被動",
+      instant: "主動",
+      buff: "強化",
+      summon: "召喚",
+    };
+
+    function stripString(str) {
+      return str.replace(/^.*?=>\s*\(\{/, "")
+        .replace(/\}\s*\)?$/, "") // remove e => ({ ... })
+        .replace(/\be\b/g, "等級") // convert e to level
+        .replace(/\bMath\.min\s*\(([^)]+)\)/g, "min($1)") // convert Math.min to min
+        .replace(/^\s*[\r\n]+/, "") // leading \r\n
+        .replace(/,\r?\n/g, "<br>") // new line
+    }
+
+    function translateKeys(effectStr, keyMap) {
+      return effectStr.replace(/\b(\w+)\s*:/g, (match, key) => {
+        return (keyMap[key] || key) + ":";
+      });
+    }
+    const effectMap = {
+      damage: "物理傷害",
+      damagePercent: "物理傷害%",
+      lifeRegen: "生命回復",
+      lifeRegenPercent: "生命回復%",
+      lifeRegenOfTotalPercent: "總生命回復%",
+      armor: "護甲",
+      armorPercent: "護甲%",
+      vitality: "體力",
+      vitalityPercent: "體力%",
+      lifeSteal: "生命汲取",
+      attackSpeed: "攻擊速度",
+      attackRating: "命中值",
+      attackRatingPercent: "命中值%",
+      lifePercent: "生命上限%",
+      blockChance: "格檔率",
+      fireDamage: "火焰傷害",
+      fireDamagePercent: "火焰傷害%",
+      coldDamage: "冰冷傷害",
+      coldDamagePercent: "冰冷傷害%",
+      earthDamage: "大地傷害",
+      earthDamagePercent: "大地傷害%",
+      airDamage: "風系傷害",
+      airDamagePercent: "風系傷害%",
+      waterDamage: "水系傷害",
+      waterDamagePercent: "水系傷害%",
+      lightningDamage: "雷電傷害",
+      lightningDamagePercent: "雷電傷害%",
+      resurrectionChance: "復活機率",
+      mana: "法力",
+      manaRegen: "法力回復",
+      manaRegenPercent: "法力回復%",
+      manaRegenOfTotalPercent: "總法力回復%",
+      manaPerHit: "每擊回魔",
+      lifePerHit: "每擊回血",
+      critChance: "爆擊機率",
+      critDamage: "爆擊傷害",
+      bonusGoldPercent: "金幣獲得%",
+      dexterity: "靈巧",
+      dexterityPercent: "靈巧%",
+      agility: "敏捷",
+      agilityPercent: "敏捷%",
+      wisdom: "智慧",
+      wisdomPercent: "智慧%",
+      strength: "力量",
+      strengthPercent: "力量%",
+      endurance: "耐力",
+      endurancePercent: "耐力%",
+      perseverance: "堅毅",
+      perseverancePercent: "堅毅%",
+      manaPercent: "法力上限%",
+      elementalDamagePercent: "元素傷害%",
+      doubleDamageChance: "雙倍傷害機率",
+      reflectFireDamage: "反射火焰傷害",
+      fireResistance: "火焰抗性",
+      coldResistance: "冰冷抗性",
+      airResistance: "風系抗性",
+      earthResistance: "大地抗性",
+      waterResistance: "水系抗性",
+      lightningResistance: "雷電抗性",
+      manaShieldPercent: "法力護盾吸收%",
+      intelligence: "智力",
+      intelligencePercent: "智力%",
+      percentOfPlayerDamage: '玩家傷害%',
+      thornsDamage: '反彈傷害',
+      thornsDamagePercent: '反彈傷害%'
+    };
 
     for (const className in ki) {
       const classSkills = ki[className];
 
-      const header = document.createElement('h2');
+      const header = document.createElement("h2");
       header.textContent = className;
       container.appendChild(header);
 
-      const table = document.createElement('table');
-      const thead = document.createElement('thead');
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
       thead.innerHTML = `
       <tr>
         <th hidden>Skill ID</th>
         <th>名稱</th>
         <th>類型</th>
-        <th>等級</th>
+        <th>時間</th>
         <th hidden>敘述</th>
         <th>效果</th>
-        <th>最大等級</th>
 
       </tr>`;
       table.appendChild(thead);
 
-      const tbody = document.createElement('tbody');
+      const tbody = document.createElement("tbody");
 
-      const typeMap = {
-        'toggle': '開關',
-        'passive': '被動',
-        'instant': '主動',
-        'buff': '強化',
-        'summon': '召喚'
-      }
       for (const skillId in classSkills) {
         const skill = classSkills[skillId];
-        const tr = document.createElement('tr');
+        const tr = document.createElement("tr");
 
-        const name = (typeof skill.name === 'function') ? skill.name() : '';
-        const type = (typeof skill.type === 'function') ? skill.type() : '';
-        const level = (typeof skill.requiredLevel === 'function') ? skill.requiredLevel() : '';
-        const desc = (typeof skill.description === 'function') ? skill.description() : '';
-        const max = (typeof skill.maxLevel === 'function') ? skill.maxLevel() : '';
+        const name = typeof skill.name === "function" ? skill.name() : "";
+        const type = typeof skill.type === "function" ? skill.type() : "";
+        const level = typeof skill.requiredLevel === "function" ? skill.requiredLevel() : "";
+        const desc = typeof skill.description === "function" ? skill.description() : "";
+        const max = typeof skill.maxLevel === "function" ? skill.maxLevel() : false;
+        const cooldown = typeof skill.cooldown === "function" ? skill.cooldown() / 1000 + ' 秒' : " - ";
+        const duration = typeof skill.duration === "function" ? skill.duration() / 1000 + ' 秒' : " - ";
+        const manaCost = skill.manaCost?.toString().replace("e => ", '').replace('e', '等級') ?? " - "
+        const summonState = stripString(skill.summonStats?.toString() ?? ' - ')
+        const effect = stripString(skill.effect.toString())
 
-        const effect = skill.effect.toString()
-          .replace(/^.*?=>\s*\(\{/, '').replace(/\}\s*\)?$/, '') // remove e => ({ ... })
-          .replace(/\be\b/g, 'level') // convert e to level
-          .replace(/\bMath\.min\s*\(([^)]+)\)/g, 'min($1)') // convert Math.min to min
-          .replace(/^\s*[\r\n]+/, '') // leading \r\n
-          .replace(/\r?\n/g, '<br>'); // new line
-        
+
+        const effectTranslated = translateKeys(effect, effectMap);
+        const summonStateTranslated = translateKeys(summonState, effectMap);
 
         tr.innerHTML = `
           <td hidden>${skillId}</td>
-          <td class="skill-name">${name}</td>
+          <td class="skill-name">(${level}) ${name} ${max ? "(Max: " + max + ")": ""}</td>
           <td>${typeMap[type]}</td>
-          <td>${level}</td>
+          <td>消耗: ${manaCost}<br>冷卻: ${cooldown}<br>持續: ${duration}</td>
           <td hidden>${desc}</td>
-          <td>${effect}</td>
-          <td>${max}</td>
+          <td>${type == 'summon' ? summonStateTranslated : effectTranslated}</td>
         `;
         tbody.appendChild(tr);
       }
@@ -86,4 +193,5 @@
     }
   </script>
 </body>
+
 </html>
