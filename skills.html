@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Skill Viewer</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    h2 { margin-top: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+    th { background: #f0f0f0; }
+    .skill-name { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Endless 全職業技能 0.5.0</h1>
+  <div id="skill-container"></div>
+
+  <script src="./skills.js"></script>
+  <script>
+    const container = document.getElementById('skill-container');
+
+    for (const className in ki) {
+      const classSkills = ki[className];
+
+      const header = document.createElement('h2');
+      header.textContent = className;
+      container.appendChild(header);
+
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+      <tr>
+        <th hidden>Skill ID</th>
+        <th>名稱</th>
+        <th>類型</th>
+        <th>等級</th>
+        <th hidden>敘述</th>
+        <th>效果</th>
+        <th>最大等級</th>
+
+      </tr>`;
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+
+      const typeMap = {
+        'toggle': '開關',
+        'passive': '被動',
+        'instant': '主動',
+        'buff': '強化',
+        'summon': '召喚'
+      }
+      for (const skillId in classSkills) {
+        const skill = classSkills[skillId];
+        const tr = document.createElement('tr');
+
+        const name = (typeof skill.name === 'function') ? skill.name() : '';
+        const type = (typeof skill.type === 'function') ? skill.type() : '';
+        const level = (typeof skill.requiredLevel === 'function') ? skill.requiredLevel() : '';
+        const desc = (typeof skill.description === 'function') ? skill.description() : '';
+        const max = (typeof skill.maxLevel === 'function') ? skill.maxLevel() : '';
+
+        const effect = skill.effect.toString()
+          .replace(/^.*?=>\s*\(\{/, '').replace(/\}\s*\)?$/, '') // remove e => ({ ... })
+          .replace(/\be\b/g, 'level') // convert e to level
+          .replace(/\bMath\.min\s*\(([^)]+)\)/g, 'min($1)') // convert Math.min to min
+          .replace(/^\s*[\r\n]+/, '') // leading \r\n
+          .replace(/\r?\n/g, '<br>'); // new line
+        
+
+        tr.innerHTML = `
+          <td hidden>${skillId}</td>
+          <td class="skill-name">${name}</td>
+          <td>${typeMap[type]}</td>
+          <td>${level}</td>
+          <td hidden>${desc}</td>
+          <td>${effect}</td>
+          <td>${max}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+  </script>
+</body>
+</html>
